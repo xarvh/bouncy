@@ -9,90 +9,51 @@ ballRestRadius =
     1.0
 
 
-elasticCoefficient =
-    30.0
+relativeAmplitude =
+    0.3
+
+
+phaseSpeed =
+    0.008
 
 
 groundY =
     1.0
 
 
-maxLinearDeformation =
-    3.0
-
-
-minLinearDeformation =
-    1.0 / maxLinearDeformation
-
-
 type alias Model =
     -- Y is the Y coordinate
-    -- Yt is dY/dt, ie the speed
     { centerY : Float
-    , centerYt : Float
 
     -- multiplies the Y coordinate, 1.0 means no deformation
     , linearDeformationY : Float
+    , time : Float
     }
 
 
 init : Model
 init =
     { centerY = 3.0
-    , centerYt = 0.0
     , linearDeformationY = 1.0
+    , time = 0.0
     }
 
 
 update : Time -> Model -> Model
 update dt model =
     let
-        -- position update
-        maxCenterY =
-            50
-
-        minCenterY =
-            groundY + ballRestRadius * minLinearDeformation
-
-        centerY =
-            clamp minCenterY maxCenterY <| model.centerY + model.centerYt * dt
-
-        -- deformation update
-        restBottomY =
-            centerY - ballRestRadius
-
-        -- arbitrarily preventing the ball to expand beyond rest position
-        maxLinearDeformationY =
-            1.0
+        time =
+            model.time + dt
 
         linearDeformationY =
-            clamp minLinearDeformation maxLinearDeformationY <| ballRestRadius - (groundY - restBottomY) / ballRestRadius
+            1.0 + relativeAmplitude * sin (time * phaseSpeed)
 
-        springOffsetY =
-            ballRestRadius * (1.0 - linearDeformationY)
-
-        -- forces
-        gravityForce =
-            -1
-
-        upwardExpansionForce =
-            max 0 <| elasticCoefficient * springOffsetY
-
-        -- mass
-        m =
-            500000
-
-        -- acceleration
-        a =
-            (gravityForce + upwardExpansionForce) / m
-
-        -- update speed
-        centerYt =
-            model.centerYt + a * dt
+        centerY =
+            groundY + ballRestRadius * linearDeformationY
     in
         { centerY = centerY
-        , centerYt = centerYt
         , linearDeformationY = linearDeformationY
+        , time = time
         }
 
 
